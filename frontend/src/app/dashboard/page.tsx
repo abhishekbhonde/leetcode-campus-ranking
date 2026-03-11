@@ -20,23 +20,19 @@ export default function DashboardPage() {
       router.push('/login');
       return;
     }
-
-    if (isAuthenticated) {
-      loadData();
-    }
+    if (isAuthenticated) loadData();
   }, [isAuthenticated, authLoading]);
 
   const loadData = async () => {
     try {
       const profileRes = await getProfile();
       setProfile(profileRes.data);
-
       if (profileRes.data.collegeId) {
         const lbRes = await getLeaderboard(profileRes.data.collegeId);
         setLeaderboard(lbRes.data.leaderboard);
       }
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
+      console.error('Failed to load:', error);
     } finally {
       setLoading(false);
     }
@@ -45,93 +41,59 @@ export default function DashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-[3px] border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
-          <p className="text-gray-400">Loading your dashboard...</p>
-        </div>
+        <div className="w-5 h-5 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
       </div>
     );
   }
 
+  const stats = profile?.leetcodeStats;
+
   return (
-    <div className="min-h-screen px-4 py-10">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Welcome header */}
+    <div className="min-h-screen px-5 py-10 animate-fadeIn">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">
-            Welcome back,{' '}
-            <span className="text-amber-400">{profile?.name}</span> 👋
+          <h1 className="text-2xl font-bold tracking-tight">
+            {profile?.name}
           </h1>
-          <p className="mt-1 text-gray-400">
-            {profile?.college?.name} • @{profile?.leetcodeUsername}
+          <p className="mt-1 text-sm text-white/25">
+            {profile?.college?.name} · @{profile?.leetcodeUsername}
           </p>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard
-            label="Total Solved"
-            value={profile?.leetcodeStats?.totalSolved || 0}
-            icon="🎯"
-            color="blue"
-          />
-          <StatsCard
-            label="Easy"
-            value={profile?.leetcodeStats?.easySolved || 0}
-            icon="🟢"
-            color="green"
-          />
-          <StatsCard
-            label="Medium"
-            value={profile?.leetcodeStats?.mediumSolved || 0}
-            icon="🟡"
-            color="amber"
-          />
-          <StatsCard
-            label="Hard"
-            value={profile?.leetcodeStats?.hardSolved || 0}
-            icon="🔴"
-            color="red"
-          />
+        {/* Top stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatsCard label="Total Solved" value={stats?.totalSolved || 0} />
+          <StatsCard label="Easy" value={stats?.easySolved || 0} subtext="problems" />
+          <StatsCard label="Medium" value={stats?.mediumSolved || 0} subtext="problems" />
+          <StatsCard label="Hard" value={stats?.hardSolved || 0} subtext="problems" />
         </div>
 
-        {/* Rank + Global info */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Rank cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <StatsCard
             label="College Rank"
-            value={
-              profile?.collegeRank
-                ? `#${profile.collegeRank} / ${profile.totalInCollege}`
-                : 'N/A'
-            }
-            icon="🏆"
-            color="orange"
-            subtext={profile?.college?.name}
+            value={profile?.collegeRank ? `#${profile.collegeRank}` : '—'}
+            subtext={profile?.totalInCollege ? `of ${profile.totalInCollege} students` : undefined}
           />
           <StatsCard
             label="Global Ranking"
-            value={
-              profile?.leetcodeStats?.globalRanking
-                ? `#${profile.leetcodeStats.globalRanking.toLocaleString()}`
-                : 'N/A'
-            }
-            icon="🌍"
-            color="purple"
+            value={stats?.globalRanking ? `#${stats.globalRanking.toLocaleString()}` : '—'}
             subtext="LeetCode Global"
           />
         </div>
 
-        {/* College leaderboard preview */}
+        {/* Leaderboard */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">
-              {profile?.college?.name} Leaderboard
+            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">
+              Campus Leaderboard
             </h2>
             <button
               onClick={() => router.push('/leaderboard')}
-              className="text-sm text-amber-400 hover:text-amber-300"
+              className="text-[13px] text-white/25 hover:text-white/50 transition-colors"
             >
-              View Full →
+              View all →
             </button>
           </div>
           <LeaderboardTable

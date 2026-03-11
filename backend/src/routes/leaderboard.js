@@ -28,6 +28,7 @@ router.get('/:collegeId', async (req, res) => {
       id: user.id,
       name: user.name,
       leetcodeUsername: user.leetcodeUsername,
+      avatar: user.avatar || '',
       totalSolved: user.leetcodeStats?.totalSolved || 0,
       easySolved: user.leetcodeStats?.easySolved || 0,
       mediumSolved: user.leetcodeStats?.mediumSolved || 0,

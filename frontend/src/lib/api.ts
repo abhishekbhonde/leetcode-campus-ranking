@@ -2,18 +2,13 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach JWT token to every request
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -23,7 +18,7 @@ export const signup = (data: {
   name: string;
   email: string;
   password: string;
-  collegeId: number;
+  collegeId?: number;
   leetcodeUsername: string;
 }) => api.post('/auth/signup', data);
 
@@ -38,11 +33,10 @@ export const getUserById = (id: number) => api.get(`/users/${id}`);
 export const getColleges = () => api.get('/colleges');
 
 // Leaderboard
-export const getLeaderboard = (collegeId: number) =>
-  api.get(`/leaderboard/${collegeId}`);
+export const getLeaderboard = (collegeId: number) => api.get(`/leaderboard/${collegeId}`);
 
 // LeetCode
-export const fetchLeetcodeStats = (username: string) =>
-  api.post(`/leetcode/fetch/${username}`);
+export const fetchLeetcodeStats = (username: string) => api.post(`/leetcode/fetch/${username}`);
+export const discoverUser = (username: string) => api.post('/leetcode/discover', { username });
 
 export default api;

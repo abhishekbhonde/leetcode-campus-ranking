@@ -2,6 +2,9 @@ const axios = require('axios');
 
 const LEETCODE_API_URL = 'https://leetcode.com/graphql';
 
+/**
+ * Fetch full LeetCode profile stats including school name.
+ */
 async function fetchLeetCodeStats(username) {
   try {
     const query = `
@@ -10,6 +13,10 @@ async function fetchLeetCodeStats(username) {
           username
           profile {
             ranking
+            school
+            realName
+            countryName
+            userAvatar
           }
           submitStatsGlobal {
             acSubmissionNum {
@@ -23,15 +30,14 @@ async function fetchLeetCodeStats(username) {
 
     const response = await axios.post(
       LEETCODE_API_URL,
-      {
-        query,
-        variables: { username },
-      },
+      { query, variables: { username } },
       {
         headers: {
           'Content-Type': 'application/json',
           'Referer': 'https://leetcode.com',
+          'User-Agent': 'Mozilla/5.0',
         },
+        timeout: 10000,
       }
     );
 
@@ -53,6 +59,10 @@ async function fetchLeetCodeStats(username) {
       hardSolved,
       contestRating: 0,
       globalRanking: user.profile?.ranking || 0,
+      school: user.profile?.school || '',
+      realName: user.profile?.realName || '',
+      avatar: user.profile?.userAvatar || '',
+      country: user.profile?.countryName || '',
     };
   } catch (error) {
     console.error(`Failed to fetch stats for ${username}:`, error.message);
@@ -63,8 +73,39 @@ async function fetchLeetCodeStats(username) {
       hardSolved: 0,
       contestRating: 0,
       globalRanking: 0,
+      school: '',
+      realName: '',
+      avatar: '',
+      country: '',
     };
   }
 }
 
-module.exports = { fetchLeetCodeStats };
+/**
+ * Try to match a LeetCode school string to a college in the DB.
+ * Uses fuzzy name matching (case-insensitive contains).
+ */
+async function matchSchoolToCollege(prisma, schoolName) {
+  if (!schoolName) return null;
+
+  const normalised = schoolName.toLowerCase().trim();
+
+  // Try exact match first
+  const exact = await prisma.college.findFirst({
+    where: { name: { equals: schoolName, mode: 'insensitive' } },
+  });
+  if (exact) return exact;
+
+  // Try partial match — check if college name is contained in school string or vice-versa
+  const allColleges = await prisma.college.findMany();
+  for (const college of allColleges) {
+    const collegeLower = college.name.toLowerCase();
+    if (normalised.includes(collegeLower) || collegeLower.includes(normalised)) {
+      return college;
+    }
+  }
+
+  return null;
+}
+
+module.exports = { fetchLeetCodeStats, matchSchoolToCollege };

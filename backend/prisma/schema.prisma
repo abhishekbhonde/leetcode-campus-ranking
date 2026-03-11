@@ -10,8 +10,8 @@ datasource db {
 model College {
   id      Int     @id @default(autoincrement())
   name    String  @unique
-  city    String
-  state   String
+  city    String  @default("")
+  state   String  @default("")
   country String  @default("India")
   users   User[]
 }
@@ -23,6 +23,7 @@ model User {
   password         String
   collegeId        Int            @map("college_id")
   leetcodeUsername  String         @map("leetcode_username")
+  avatar           String         @default("")
   createdAt        DateTime       @default(now()) @map("created_at")
   college          College        @relation(fields: [collegeId], references: [id])
   leetcodeStats    LeetcodeStats?

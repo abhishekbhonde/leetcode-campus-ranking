@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
-const { fetchLeetCodeStats } = require('../services/leetcode');
+const { fetchLeetCodeStats, matchSchoolToCollege } = require('../services/leetcode');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -12,14 +12,44 @@ router.post('/signup', async (req, res) => {
   try {
     const { name, email, password, collegeId, leetcodeUsername } = req.body;
 
-    if (!name || !email || !password || !collegeId || !leetcodeUsername) {
-      return res.status(400).json({ error: 'All fields are required.' });
+    if (!name || !email || !password || !leetcodeUsername) {
+      return res.status(400).json({ error: 'Name, email, password, and LeetCode username are required.' });
     }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'Email already registered.' });
+    }
+
+    // Fetch LeetCode stats + school
+    const stats = await fetchLeetCodeStats(leetcodeUsername);
+
+    // If no collegeId provided, try to auto-detect from LeetCode school
+    let finalCollegeId = collegeId ? parseInt(collegeId) : null;
+
+    if (!finalCollegeId && stats.school) {
+      const matched = await matchSchoolToCollege(prisma, stats.school);
+      if (matched) {
+        finalCollegeId = matched.id;
+      }
+    }
+
+    // If still no college, create one from the LeetCode school name
+    if (!finalCollegeId && stats.school) {
+      const newCollege = await prisma.college.create({
+        data: {
+          name: stats.school,
+          city: '',
+          state: '',
+          country: stats.country || 'Unknown',
+        },
+      });
+      finalCollegeId = newCollege.id;
+    }
+
+    if (!finalCollegeId) {
+      return res.status(400).json({ error: 'Could not determine college. Please select one manually.' });
     }
 
     // Hash password
@@ -31,17 +61,22 @@ router.post('/signup', async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        collegeId: parseInt(collegeId),
+        collegeId: finalCollegeId,
         leetcodeUsername,
+        avatar: stats.avatar || '',
       },
     });
 
-    // Fetch initial LeetCode stats
-    const stats = await fetchLeetCodeStats(leetcodeUsername);
+    // Save stats
     await prisma.leetcodeStats.create({
       data: {
         userId: user.id,
-        ...stats,
+        totalSolved: stats.totalSolved,
+        easySolved: stats.easySolved,
+        mediumSolved: stats.mediumSolved,
+        hardSolved: stats.hardSolved,
+        contestRating: stats.contestRating,
+        globalRanking: stats.globalRanking,
       },
     });
 
@@ -52,6 +87,8 @@ router.post('/signup', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const college = await prisma.college.findUnique({ where: { id: finalCollegeId } });
+
     res.status(201).json({
       message: 'User created successfully',
       token,
@@ -61,7 +98,10 @@ router.post('/signup', async (req, res) => {
         email: user.email,
         leetcodeUsername: user.leetcodeUsername,
         collegeId: user.collegeId,
+        collegeName: college?.name || '',
+        avatar: user.avatar,
       },
+      detectedSchool: stats.school || null,
     });
   } catch (error) {
     console.error('Signup error:', error);
@@ -108,6 +148,7 @@ router.post('/login', async (req, res) => {
         leetcodeUsername: user.leetcodeUsername,
         collegeId: user.collegeId,
         collegeName: user.college.name,
+        avatar: user.avatar,
       },
     });
   } catch (error) {
