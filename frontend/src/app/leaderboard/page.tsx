@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getColleges, getLeaderboard } from '@/lib/api';
 import LeaderboardTable from '@/components/LeaderboardTable';
 import { College, LeaderboardEntry } from '@/types';
+import { Loader2 } from 'lucide-react';
 
 export default function LeaderboardPage() {
   const { user } = useAuth();
@@ -34,15 +35,15 @@ export default function LeaderboardPage() {
   }, [selectedCollege, colleges]);
 
   return (
-    <div className="min-h-screen px-5 py-10 animate-fadeIn">
+    <div className="min-h-screen px-5 py-10 animate-fade-in">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Leaderboard</h1>
             {collegeName && (
-              <p className="mt-1 text-sm text-white/25">
-                {collegeName} · {leaderboard.length} members
+              <p className="mt-1 text-sm text-muted-foreground">
+                {collegeName} · {leaderboard.length} member{leaderboard.length !== 1 ? 's' : ''}
               </p>
             )}
           </div>
@@ -50,12 +51,10 @@ export default function LeaderboardPage() {
           <select
             value={selectedCollege || ''}
             onChange={(e) => setSelectedCollege(parseInt(e.target.value))}
-            className="px-4 py-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-white/20 appearance-none min-w-[220px] transition-colors"
+            className="flex h-10 rounded-md border border-input bg-secondary/50 px-3 py-1 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring appearance-none min-w-[220px]"
           >
             {colleges.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
         </div>
@@ -63,13 +62,10 @@ export default function LeaderboardPage() {
         {/* Table */}
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <div className="w-5 h-5 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <LeaderboardTable
-            entries={leaderboard}
-            currentUserId={user?.id}
-          />
+          <LeaderboardTable entries={leaderboard} currentUserId={user?.id} />
         )}
       </div>
     </div>

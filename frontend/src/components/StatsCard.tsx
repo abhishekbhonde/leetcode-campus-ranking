@@ -1,21 +1,25 @@
+import { cn } from "@/lib/utils";
+import { CardSpotlight } from "@/components/aceternity/spotlight";
+
 interface StatsCardProps {
   label: string;
   value: number | string;
   subtext?: string;
+  className?: string;
 }
 
-export default function StatsCard({ label, value, subtext }: StatsCardProps) {
+export default function StatsCard({ label, value, subtext, className }: StatsCardProps) {
   return (
-    <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.1] transition-colors">
-      <p className="text-[11px] font-medium uppercase tracking-widest text-white/30">
+    <CardSpotlight className={cn("p-5", className)}>
+      <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-bold text-white tracking-tight">
+      <p className="mt-2 text-2xl font-bold text-foreground tracking-tight">
         {value}
       </p>
       {subtext && (
-        <p className="mt-1 text-[12px] text-white/20">{subtext}</p>
+        <p className="mt-1 text-[12px] text-muted-foreground/50">{subtext}</p>
       )}
-    </div>
+    </CardSpotlight>
   );
 }

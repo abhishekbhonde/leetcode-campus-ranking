@@ -7,6 +7,8 @@ import { getProfile, getLeaderboard } from '@/lib/api';
 import StatsCard from '@/components/StatsCard';
 import LeaderboardTable from '@/components/LeaderboardTable';
 import { User, LeaderboardEntry } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Loader2, ChevronRight } from 'lucide-react';
 
 export default function DashboardPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -16,10 +18,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    if (!authLoading && !isAuthenticated) { router.push('/login'); return; }
     if (isAuthenticated) loadData();
   }, [isAuthenticated, authLoading]);
 
@@ -41,7 +40,7 @@ export default function DashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-5 h-5 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -49,19 +48,22 @@ export default function DashboardPage() {
   const stats = profile?.leetcodeStats;
 
   return (
-    <div className="min-h-screen px-5 py-10 animate-fadeIn">
+    <div className="min-h-screen px-5 py-10 animate-fade-in">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {profile?.name}
-          </h1>
-          <p className="mt-1 text-sm text-white/25">
-            {profile?.college?.name} · @{profile?.leetcodeUsername}
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{profile?.name}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {profile?.college?.name} · @{profile?.leetcodeUsername}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => router.push('/profile')}>
+            View Profile <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
         </div>
 
-        {/* Top stats */}
+        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatsCard label="Total Solved" value={stats?.totalSolved || 0} />
           <StatsCard label="Easy" value={stats?.easySolved || 0} subtext="problems" />
@@ -69,7 +71,7 @@ export default function DashboardPage() {
           <StatsCard label="Hard" value={stats?.hardSolved || 0} subtext="problems" />
         </div>
 
-        {/* Rank cards */}
+        {/* Rank row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <StatsCard
             label="College Rank"
@@ -86,20 +88,14 @@ export default function DashboardPage() {
         {/* Leaderboard */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">
+            <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
               Campus Leaderboard
-            </h2>
-            <button
-              onClick={() => router.push('/leaderboard')}
-              className="text-[13px] text-white/25 hover:text-white/50 transition-colors"
-            >
-              View all →
-            </button>
+            </p>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/leaderboard')} className="text-xs text-muted-foreground">
+              View all <ChevronRight className="w-3 h-3 ml-1" />
+            </Button>
           </div>
-          <LeaderboardTable
-            entries={leaderboard.slice(0, 10)}
-            currentUserId={profile?.id}
-          />
+          <LeaderboardTable entries={leaderboard.slice(0, 10)} currentUserId={profile?.id} />
         </div>
       </div>
     </div>
