@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model College {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  city    String
+  state   String
+  country String  @default("India")
+  users   User[]
+}
+
+model User {
+  id               Int            @id @default(autoincrement())
+  name             String
+  email            String         @unique
+  password         String
+  collegeId        Int            @map("college_id")
+  leetcodeUsername  String         @map("leetcode_username")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  college          College        @relation(fields: [collegeId], references: [id])
+  leetcodeStats    LeetcodeStats?
+
+  @@map("users")
+}
+
+model LeetcodeStats {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique @map("user_id")
+  totalSolved    Int      @default(0) @map("total_solved")
+  easySolved     Int      @default(0) @map("easy_solved")
+  mediumSolved   Int      @default(0) @map("medium_solved")
+  hardSolved     Int      @default(0) @map("hard_solved")
+  contestRating  Float    @default(0) @map("contest_rating")
+  globalRanking  Int      @default(0) @map("global_ranking")
+  lastUpdated    DateTime @default(now()) @map("last_updated")
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@map("leetcode_stats")
+}
