@@ -18,25 +18,24 @@ router.post('/fetch/:username', async (req, res) => {
     });
 
     if (user) {
+      const dbStats = {
+        totalSolved: stats.totalSolved,
+        easySolved: stats.easySolved,
+        mediumSolved: stats.mediumSolved,
+        hardSolved: stats.hardSolved,
+        contestRating: stats.contestRating,
+        globalRanking: stats.globalRanking,
+      };
+
       await prisma.leetcodeStats.upsert({
         where: { userId: user.id },
         update: {
-          totalSolved: stats.totalSolved,
-          easySolved: stats.easySolved,
-          mediumSolved: stats.mediumSolved,
-          hardSolved: stats.hardSolved,
-          contestRating: stats.contestRating,
-          globalRanking: stats.globalRanking,
+          ...dbStats,
           lastUpdated: new Date(),
         },
         create: {
           userId: user.id,
-          totalSolved: stats.totalSolved,
-          easySolved: stats.easySolved,
-          mediumSolved: stats.mediumSolved,
-          hardSolved: stats.hardSolved,
-          contestRating: stats.contestRating,
-          globalRanking: stats.globalRanking,
+          ...dbStats,
         },
       });
     }

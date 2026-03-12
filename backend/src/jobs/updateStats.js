@@ -16,12 +16,24 @@ async function updateAllStats() {
     for (const user of users) {
       try {
         const stats = await fetchLeetCodeStats(user.leetcodeUsername);
+        
+        // Filter stats to only include fields in the LeetcodeStats model
+        const dbStats = {
+          totalSolved: stats.totalSolved,
+          easySolved: stats.easySolved,
+          mediumSolved: stats.mediumSolved,
+          hardSolved: stats.hardSolved,
+          contestRating: stats.contestRating,
+          globalRanking: stats.globalRanking,
+        };
+
         await prisma.leetcodeStats.upsert({
           where: { userId: user.id },
-          update: { ...stats, lastUpdated: new Date() },
-          create: { userId: user.id, ...stats },
+          update: { ...dbStats, lastUpdated: new Date() },
+          create: { userId: user.id, ...dbStats },
         });
         console.log(`✅ Updated stats for ${user.leetcodeUsername}`);
+
       } catch (err) {
         console.error(`❌ Failed to update ${user.leetcodeUsername}:`, err.message);
       }

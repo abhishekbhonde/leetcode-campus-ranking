@@ -8,13 +8,15 @@ datasource db {
 }
 
 model College {
-  id      Int     @id @default(autoincrement())
-  name    String  @unique
-  city    String  @default("")
-  state   String  @default("")
-  country String  @default("India")
-  users   User[]
+  id           Int     @id @default(autoincrement())
+  name         String  @unique
+  city         String  @default("")
+  state        String  @default("")
+  country      String  @default("India")
+  leetcodeSlug String? @unique @map("leetcode_slug")
+  users        User[]
 }
+
 
 model User {
   id               Int            @id @default(autoincrement())
